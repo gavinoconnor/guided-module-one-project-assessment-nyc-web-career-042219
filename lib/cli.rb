@@ -3,6 +3,7 @@ require 'pry'
 require 'json'
 
 class CommandLineInterface
+attr_accessor :user
 
 # Greet the User.
   def greet
@@ -15,20 +16,32 @@ class CommandLineInterface
 # If new user, create them.
   def find_or_create_user
     user_name = gets.chomp
-    user = User.find_by(name: user_name)
+    self.user = User.find_by(name: user_name)
     if user != nil
       puts "Welcome back, #{user.name}!"
-      self.user_action(user)
+      self.user_menu(user)
     else
       user = User.create(name: user_name)
       puts "Thanks for joining!"
-      self.user_action(user)
+      self.user_menu(user)
     end
+  end
+# Create ticket
+
+  def create_ticket(user)
+    ticket_name = gets.chomp
+    puts "Please enter the venue:"
+    ticket_venue = gets.chomp
+    venue_name = Venue.all.find_by(name: ticket_venue)
+    puts "Please enter the band name:"
+    ticket_band = gets.chomp
+    x = ticket_band
+    Ticket.create(self.user.id = user_id, venue_name.id = venue_id, x = band_name, claimed=false)
   end
 
 #Present menu options.
-  def user_action(user)
-    puts "-- Search Tickets, Post Tickets, or Update/Delete Profile?"
+  def user_menu(user)
+    puts "-- Search, Post Tickets, Update/Delete Profile, or Exit?"
     user_response(user)
   end
 
@@ -36,13 +49,17 @@ class CommandLineInterface
   def user_response(user)
     post_or_search = gets.chomp
     if post_or_search.downcase == "search"
-      self.search_response
+      self.search_response(user)
     elsif post_or_search.downcase == "post"
       self.post_ticket_response
     elsif post_or_search.downcase == "update"
       self.update_user(user)
+    elsif post_or_search.downcase == "delete"
+      self.update_user(user)
+    elsif post_or_search.downcase == "exit"
+      exit
     else
-      self.greet
+      self.user_menu(user)
   end
 end
 
@@ -75,36 +92,25 @@ end
       existence = gets.chomp
       if existence.downcase == "y"
         user.delete
-        "Deleted, have a nice day!"
+        puts "Deleted, have a nice day!"
       end
     else
-      self.greet
+      self.user_menu(user)
     end
   end
 
-# Post-response: user will enter ticket information:
-  # def post_ticket_response
-  #   puts "Please enter your full name:"
-  #   post_ticket_name = gets.chomp
-  #   puts "Please enter the venue:"
-  #   post_ticket_venue = gets.chomp
-  #   puts "Please enter the band name:"
-  #   post_ticket_band = gets.chomp
-  #   Ticket.create(post_ticket_name, , Ticket.band_name)
-  # end
 
 # Search-responses, user can select by venue, user, or city.
-
-  def search_response
+  def search_response(user)
     puts "-- Search by Venue, User, or City:"
     venue_or_user = gets.chomp
       if venue_or_user.downcase == "venue"
         self.search_venue
       elsif venue_or_user.downcase == "user"
-        self.search_user
+        self.search_user(user)
       elsif venue_or_user.downcase == "city"
       else
-        self.greet
+        self.user_menu(user)
       end
   end
 
@@ -118,12 +124,12 @@ end
         venue_input = Venue.all.find_by(name: name_input)
         self.venue_by_name(venue_input)
       else
-        self.greet
+        self.user_menu(user)
       end
   end
 
 # User search function, can choose between direct input and list of all users.
-  def search_user
+  def search_user(user)
     puts "-- Enter User Name, or 'all' for a current list of ticketholders."
     name_input = gets.chomp
       if name_input.downcase == "all"
@@ -132,7 +138,7 @@ end
         name_input = User.all.find_by(name: name_input)
         self.user_by_name(name_input)
       else
-        self.greet
+        self.user_menu(user)
       end
     end
 
@@ -148,9 +154,9 @@ end
           response.downcase == "y"
           puts "-- We're working to let you message them soon!"
           puts " "
-          self.greet
+          self.user_menu(user)
         else
-          self.greet
+          self.user_menu(user)
     end
   end
 
@@ -160,7 +166,7 @@ end
          puts "#{index + 1}. #{person.name}"
          all_names
         end
-          puts "/n" + "*" * 23 + "/n"
+          puts "\n #{"*" * 23}"
           puts "-- Enter a User's number for more info:"
           num_select = gets.chomp.to_i
             if num_select == User.all.find_by(id: num_select).id
@@ -170,6 +176,7 @@ end
             else
               puts "It looks like that user doesn't have any current tickets."
             end
+            self.user_menu(self.user)
     end
 
 
@@ -187,10 +194,10 @@ end
               puts "#{User.find(user_id).name} has an extra ticket. We're working to let you message them soon!"
               puts " "
               else
-                self.greet
+                self.user_menu(user)
               end
         end
-        self.greet
+        self.user_menu(user)
     end
 
 # List numbered venues helper function
@@ -215,7 +222,7 @@ end
               else
                 puts "It looks like there aren't any extra tickets to upcoming shows at #{venue_name}."
               end
-              self.greet
+              self.user_menu(user)
             end
       end
 
@@ -227,11 +234,16 @@ end
 end
 
 
-
     #list of venues - should return a list of venues, with the band_names
-    #list of users - should return users who have tickets, with band_names
 
-    #list of tickets
+    #list of users - should return users who have tickets, with band_names
+  #   def list_of_users
+  #     user_list = {}
+  #     User.all.map do |user, ticket|
+  #       user_list << user[ticket]
+  #       user_list
+  #   end
+  # end
 
   #   response = RestClient.get("https://api.songkick.com/api/3.0/artists/379603/gigography.json?apikey=nu80rqJInvFVVDU4")
   #   string = response.body
