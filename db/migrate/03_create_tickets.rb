@@ -5,6 +5,7 @@ class CreateTickets < ActiveRecord::Migration[4.2]
       t.string :user_id
       t.string :venue_id
       t.string :band_name
+      t.boolean :claimed
     end
   end
 end
