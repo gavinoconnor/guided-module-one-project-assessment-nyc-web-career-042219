@@ -14,6 +14,7 @@ ActiveRecord::Schema.define(version: 2019_05_08_220819) do
 
   create_table "tickets", force: :cascade do |t|
     t.string "band_name"
+    t.boolean "claimed"
     t.integer "user_id"
     t.integer "venue_id"
   end
