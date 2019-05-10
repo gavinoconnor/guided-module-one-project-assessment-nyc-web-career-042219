@@ -1,15 +1,16 @@
 require 'rest-client'
 require 'pry'
 require 'json'
+require 'colorize'
 
 class CommandLineInterface
-attr_accessor :user
+attr_accessor :user, :venue, :band_name, :claimed
 
 # Greet the User.
   def greet
-    puts "Welcome to Ticket Pick!"
+    puts "Welcome to Ticket Pick!".colorize(:blue)
     puts "*" * 23
-    puts "Please enter your name:"
+    puts "Please enter your name:".colorize(:blue)
     self.find_or_create_user
   end
 
@@ -18,30 +19,19 @@ attr_accessor :user
     user_name = gets.chomp
     self.user = User.find_by(name: user_name)
     if user != nil
-      puts "Welcome back, #{user.name}!"
+      puts "Welcome back, #{user.name}!".colorize(:blue)
       self.user_menu(user)
     else
       user = User.create(name: user_name)
-      puts "Thanks for joining!"
+      puts "Thanks for joining!".colorize(:blue)
       self.user_menu(user)
     end
   end
-# Create ticket
 
-  def create_ticket(user)
-    ticket_name = gets.chomp
-    puts "Please enter the venue:"
-    ticket_venue = gets.chomp
-    venue_name = Venue.all.find_by(name: ticket_venue)
-    puts "Please enter the band name:"
-    ticket_band = gets.chomp
-    x = ticket_band
-    Ticket.create(self.user.id = user_id, venue_name.id = venue_id, x = band_name, claimed=false)
-  end
 
 #Present menu options.
   def user_menu(user)
-    puts "-- Search, Post Tickets, Update/Delete Profile, or Exit?"
+    puts "-- Search, Post Tickets, Update/Delete Profile, or Exit?".colorize(:blue)
     user_response(user)
   end
 
@@ -51,7 +41,7 @@ attr_accessor :user
     if post_or_search.downcase == "search"
       self.search_response(user)
     elsif post_or_search.downcase == "post"
-      self.post_ticket_response
+      self.create_ticket(user)
     elsif post_or_search.downcase == "update"
       self.update_user(user)
     elsif post_or_search.downcase == "delete"
@@ -63,10 +53,21 @@ attr_accessor :user
   end
 end
 
+# Create/post ticket
+  def create_ticket(user)
+    puts "Please enter the venue:".colorize(:blue)
+    ticket_venue = gets.chomp
+    venue_name = Venue.all.find_by(name: ticket_venue)
+    puts "Please enter the band name:".colorize(:blue)
+    ticket_band = gets.chomp
+    band = ticket_band
+    Ticket.create(self.user.id = user.id, venue_name = venue_name.id, band = band_name, claimed=false)
+  end
+
 # Update user helper function
   def update_user(user)
-    puts "What would you like to update: Name, Location, Age, Gender, Relationship Status?"
-    puts " Or would you like to delete your profile?"
+    puts "What would you like to update: Name, Location, Age, Gender, Relationship Status?".colorize(:blue)
+    puts " Or would you like to delete your profile?".colorize(:blue)
     update = gets.chomp
     if update.downcase == "name"
       puts "Please update your name:"
@@ -85,8 +86,9 @@ end
       gender = gets.chomp
       user.update(gender: gender)
     elsif update.downcase == "status"
+      puts "Please update your status:"
       status = gets.chomp
-      user.relationship_status(relationship_status: status)
+      user.update(relationship_status: status)
     elsif update.downcase == "delete"
       puts "Are you sure? Y/N"
       existence = gets.chomp
@@ -94,6 +96,7 @@ end
         user.delete
         puts "Deleted, have a nice day!"
       end
+      self.user_menu(user)
     else
       self.user_menu(user)
     end
@@ -102,7 +105,7 @@ end
 
 # Search-responses, user can select by venue, user, or city.
   def search_response(user)
-    puts "-- Search by Venue, User, or City:"
+    puts "-- Search by Venue, User, or City:".colorize(:blue)
     venue_or_user = gets.chomp
       if venue_or_user.downcase == "venue"
         self.search_venue
@@ -116,7 +119,7 @@ end
 
 # Venue search helper function:
   def search_venue
-    puts "-- Enter Venue Name, or 'all' for current list of venues:"
+    puts "-- Enter Venue Name, or 'all' for current list of venues:".colorize(:blue)
     venue_input = gets.chomp
       if venue_input.downcase == "all"
         self.venue_by_number
@@ -130,7 +133,7 @@ end
 
 # User search function, can choose between direct input and list of all users.
   def search_user(user)
-    puts "-- Enter User Name, or 'all' for a current list of ticketholders."
+    puts "-- Enter User Name, or 'all' for a current list of ticketholders.".colorize(:blue)
     name_input = gets.chomp
       if name_input.downcase == "all"
         self.user_by_number
@@ -146,13 +149,13 @@ end
     def user_by_name(name_input)
       name_info = name_input.tickets.first.user_id
       name_with_band = name_input.tickets.first.band_name
-      puts "-- Looks like #{User.find(name_info).name} has a ticket for #{name_with_band}."
+      puts "-- Looks like #{User.find(name_info).name} has a ticket for #{name_with_band}.".colorize(:blue)
       puts "*"*60
-      puts "-- Would you like to message #{User.find(name_info).name}? Y/N"
+      puts "-- Would you like to message #{User.find(name_info).name}? Y/N".colorize(:blue)
       response = gets.chomp
         if
           response.downcase == "y"
-          puts "-- We're working to let you message them soon!"
+          puts "-- We're working to let you message them soon!".colorize(:blue)
           puts " "
           self.user_menu(user)
         else
@@ -167,14 +170,24 @@ end
          all_names
         end
           puts "\n #{"*" * 23}"
-          puts "-- Enter a User's number for more info:"
+          puts "-- Enter a User's number for more info:".colorize(:blue)
           num_select = gets.chomp.to_i
             if num_select == User.all.find_by(id: num_select).id
               ticket_info = User.all.find_by(id: num_select).tickets.first.band_name
               user_name = User.all.find_by(id: num_select).name
               puts "#{user_name} has the following tickets: #{ticket_info}"
+              puts "-- Would you like to message #{user_name}? Y/N".colorize(:blue)
+              response = gets.chomp
+                if
+                  response.downcase == "y"
+                  puts "-- We're working to let you message them soon!".colorize(:blue)
+                  puts " "
+                  self.user_menu(user)
+                else
+                  self.user_menu(user)
+                end
             else
-              puts "It looks like that user doesn't have any current tickets."
+              puts "It looks like that user doesn't have any current tickets.".colorize(:blue)
             end
             self.user_menu(self.user)
     end
@@ -187,11 +200,11 @@ end
         if venue_input
             puts "-- Looks like we have a ticket for #{venue_with_band} at #{venue_input.name}!"
             puts "*"*60
-            puts "-- Would you like to view the ticketholder? Y/N"
+            puts "-- Would you like to view the ticketholder? Y/N".colorize(:blue)
             view_ticketholder = gets.chomp
               if view_ticketholder.downcase == "y"
                 user_id = venue_input.tickets.first.user_id
-              puts "#{User.find(user_id).name} has an extra ticket. We're working to let you message them soon!"
+              puts "#{User.find(user_id).name} has an extra ticket. We're working to let you message them soon!".colorize(:blue)
               puts " "
               else
                 self.user_menu(user)
@@ -207,20 +220,20 @@ end
            all_venues
           end
             puts "\n #{"*" * 23}"
-            puts "-- Enter a Venue's number for more info:"
+            puts "-- Enter a Venue's number for more info:".colorize(:blue)
             num_select = gets.chomp.to_i
               if num_select == Venue.all.find_by(id: num_select).id
                 ticket_info = Venue.all.find_by(id: num_select).tickets.first.band_name
                 venue_name = Venue.all.find_by(id: num_select).name
-                puts "#{venue_name} has the following shows: #{ticket_info}."
-                puts "Would you like to see who has tickets? Y/N"
+                puts "#{venue_name} has the following shows: #{ticket_info}.".colorize(:blue)
+                puts "Would you like to see who has tickets? Y/N".colorize(:blue)
                 view_ticketholder = gets.chomp
                   if view_ticketholder.downcase == "y"
                     user_id = Venue.all.find_by(id: num_select).tickets.first.user_id
-                  puts "-- #{User.find(user_id).name} has an extra ticket. We're working to let you message them soon!"
+                  puts "-- #{User.find(user_id).name} has an extra ticket. We're working to let you message them soon!".colorize(:blue)
                   puts " "
               else
-                puts "It looks like there aren't any extra tickets to upcoming shows at #{venue_name}."
+                puts "It looks like there aren't any extra tickets to upcoming shows at #{venue_name}.".colorize(:blue)
               end
               self.user_menu(user)
             end
